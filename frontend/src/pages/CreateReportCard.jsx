@@ -181,7 +181,7 @@ function CreateReportCard() {
       setReportData(saved);
     } catch (saveError) {
       if (saveError.code === 'ERR_NETWORK') {
-        setError('Backend server is not reachable. Start backend on http://localhost:5000 and check MongoDB.');
+        setError('Backend server is not reachable. Please try again later.');
       } else if (saveError.response?.data?.message) {
         setError(saveError.response.data.message);
       } else {

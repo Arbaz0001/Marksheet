@@ -21,7 +21,7 @@ function History() {
       setItems(data);
     } catch (fetchError) {
       if (fetchError.code === 'ERR_NETWORK') {
-        setError('Backend server is not reachable. Start backend on http://localhost:5000 and check MongoDB.');
+        setError('Backend server is not reachable. Please try again later.');
       } else if (fetchError.response?.data?.message) {
         setError(fetchError.response.data.message);
       } else {
