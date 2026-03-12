@@ -10,12 +10,15 @@ function ReportCardLayout({ reportData, onBack }) {
   const handleDownloadPdf = async () => {
     if (!reportRef.current) return;
 
-    const canvas = await html2canvas(reportRef.current, {
+    const element = reportRef.current;
+    const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
       backgroundColor: '#ffffff',
-      windowWidth: reportRef.current.scrollWidth,
-      windowHeight: reportRef.current.scrollHeight,
+      width: element.scrollWidth,
+      height: element.scrollHeight,
+      windowWidth: element.scrollWidth,
+      logging: false,
     });
 
     const imgData = canvas.toDataURL('image/png');
@@ -23,7 +26,24 @@ function ReportCardLayout({ reportData, onBack }) {
     const pageWidth = 210;
     const pageHeight = 297;
 
-    pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+    const imgWidthMm = pageWidth;
+    const imgHeightMm = (canvas.height * imgWidthMm) / canvas.width;
+
+    if (imgHeightMm <= pageHeight) {
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidthMm, imgHeightMm);
+    } else {
+      let heightLeft = imgHeightMm;
+      let yPos = 0;
+      pdf.addImage(imgData, 'PNG', 0, yPos, imgWidthMm, imgHeightMm);
+      heightLeft -= pageHeight;
+      while (heightLeft > 0) {
+        yPos -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, yPos, imgWidthMm, imgHeightMm);
+        heightLeft -= pageHeight;
+      }
+    }
+
     pdf.save(`${reportData.studentName}-report-card.pdf`);
   };
 
@@ -49,21 +69,41 @@ function ReportCardLayout({ reportData, onBack }) {
         style={{ minHeight: '297mm' }}
       >
         <div className="relative border border-red-700">
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div
+            className="pointer-events-none absolute inset-0 z-0"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+          >
             <img
               src="/school.jpeg"
               alt="School watermark"
-               className="h-auto w-[60%] object-contain opacity-[0.10]"
+              style={{
+                width: '70%',
+                height: 'auto',
+                objectFit: 'contain',
+                opacity: 0.1,
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+              }}
             />
           </div>
 
           <div className="relative z-10">
-          <header className="grid grid-cols-[82px_1fr] border-b border-red-700">
+          <header className="grid grid-cols-[96px_1fr] border-b border-red-700">
             <div className="flex items-center justify-center border-r border-red-700 p-2 text-center text-[10px] font-semibold">
               <img
                 src="/school.jpeg"
                 alt="School logo"
-                className="h-[64px] w-[64px] rounded-full object-cover"
+                style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', imageRendering: 'high-quality' }}
                 onError={(event) => {
                   event.currentTarget.style.display = 'none';
                 }}
@@ -76,13 +116,13 @@ function ReportCardLayout({ reportData, onBack }) {
               <p className="text-[16px] font-semibold text-slate-800">{reportData.schoolAddress}</p>
               <div className="mt-1 flex items-center justify-between text-[11px]">
                 <span>Department of Education, Rajasthan</span>
-                <span>{reportData.diseCode}</span>
+                <span>{reportData.schoolDISECode || reportData.diseCode}</span>
               </div>
             </div>
           </header>
 
           <div className="grid grid-cols-[1fr_200px] border-b border-red-700">
-            <div className="border-r border-red-700 p-2 text-center text-[52px] leading-none text-blue-700">
+            <div className="border-r border-red-700 p-2 text-center text-[38px] font-semibold leading-tight text-blue-700">
               Final Report Card
             </div>
             <div className="p-2 text-[16px] font-semibold text-red-700">
@@ -95,7 +135,7 @@ function ReportCardLayout({ reportData, onBack }) {
 
           <StudentInfo reportData={reportData} />
 
-          <MarksTable subjects={reportData.subjects} />
+          <MarksTable subjects={reportData.subjects} examStructure={reportData.examStructure} />
 
           <section className="border-t border-red-700">
             <table className="w-full border-collapse text-[11px]">

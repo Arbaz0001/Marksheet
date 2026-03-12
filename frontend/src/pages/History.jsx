@@ -1,8 +1,7 @@
- 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ReportCardLayout from '../components/ReportCardLayout';
-import api from '../api';
+import { getMarksheets } from '../api';
 
 function History() {
   const [query, setQuery] = useState('');
@@ -15,18 +14,13 @@ function History() {
     try {
       setLoading(true);
       setError('');
-      const response = await api.get('/report-cards', {
-        params: { query: searchQuery },
-      });
-      const data = response.data;
-      setItems(data);
-    } catch (fetchError) {
-      if (fetchError.code === 'ERR_NETWORK') {
+      const res = await getMarksheets(searchQuery);
+      setItems(res.data);
+    } catch (err) {
+      if (err.code === 'ERR_NETWORK') {
         setError('Backend server is not reachable. Please try again later.');
-      } else if (fetchError.response?.data?.message) {
-        setError(fetchError.response.data.message);
       } else {
-        setError(fetchError.message || 'Unable to load history.');
+        setError(err.response?.data?.message || err.message || 'Unable to load history.');
       }
     } finally {
       setLoading(false);
@@ -37,8 +31,8 @@ function History() {
     fetchHistory('');
   }, []);
 
-  const handleSearch = (event) => {
-    event.preventDefault();
+  const handleSearch = (e) => {
+    e.preventDefault();
     fetchHistory(query);
   };
 
@@ -49,7 +43,7 @@ function History() {
   return (
     <section className="rounded-xl border border-slate-300 bg-white p-6 shadow-md sm:p-8">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Report Card History</h1>
+        <h1 className="text-2xl font-bold">Marksheet History</h1>
         <Link to="/" className="text-sm font-semibold text-slate-700 underline">
           Back to Dashboard
         </Link>
@@ -60,7 +54,7 @@ function History() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by student name or roll number"
+          placeholder="Search by student name, roll number, or class"
           className="w-full rounded border border-slate-300 px-3 py-2"
         />
         <button
@@ -71,7 +65,7 @@ function History() {
         </button>
       </form>
 
-      {loading ? <p className="text-sm text-slate-600">Loading...</p> : null}
+      {loading ? <p className="text-sm text-slate-500">Loading...</p> : null}
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       <div className="overflow-x-auto">
@@ -79,17 +73,20 @@ function History() {
           <thead>
             <tr className="bg-slate-100">
               <th className="border border-slate-400 px-2 py-2 text-left">Student Name</th>
-              <th className="border border-slate-400 px-2 py-2 text-left">Roll Number</th>
+              <th className="border border-slate-400 px-2 py-2 text-left">Roll No.</th>
               <th className="border border-slate-400 px-2 py-2 text-left">Class & Section</th>
-              <th className="border border-slate-400 px-2 py-2 text-left">Result Date</th>
-              <th className="border border-slate-400 px-2 py-2">Action</th>
+              <th className="border border-slate-400 px-2 py-2 text-left">School</th>
+              <th className="border border-slate-400 px-2 py-2 text-left">Session</th>
+              <th className="border border-slate-400 px-2 py-2 text-center">%</th>
+              <th className="border border-slate-400 px-2 py-2 text-center">Result</th>
+              <th className="border border-slate-400 px-2 py-2 text-center">Action</th>
             </tr>
           </thead>
           <tbody>
             {items.length === 0 ? (
               <tr>
-                <td className="border border-slate-400 px-2 py-3 text-center" colSpan={5}>
-                  No report cards found.
+                <td className="border border-slate-400 px-2 py-3 text-center" colSpan={8}>
+                  No marksheets found.
                 </td>
               </tr>
             ) : (
@@ -98,12 +95,25 @@ function History() {
                   <td className="border border-slate-400 px-2 py-1">{item.studentName}</td>
                   <td className="border border-slate-400 px-2 py-1">{item.rollNumber}</td>
                   <td className="border border-slate-400 px-2 py-1">{item.classSection}</td>
-                  <td className="border border-slate-400 px-2 py-1">{item.resultDate}</td>
+                  <td className="border border-slate-400 px-2 py-1">{item.schoolName}</td>
+                  <td className="border border-slate-400 px-2 py-1">{item.session}</td>
+                  <td className="border border-slate-400 px-2 py-1 text-center">
+                    {item.overallResult?.percentage ?? '-'}%
+                  </td>
+                  <td
+                    className={`border border-slate-400 px-2 py-1 text-center font-semibold ${
+                      item.overallResult?.result === 'Pass'
+                        ? 'text-green-700'
+                        : 'text-red-600'
+                    }`}
+                  >
+                    {item.overallResult?.result ?? '-'}
+                  </td>
                   <td className="border border-slate-400 px-2 py-1 text-center">
                     <button
                       type="button"
                       onClick={() => setSelected(item)}
-                      className="rounded border border-slate-500 px-3 py-1 font-semibold hover:bg-slate-100"
+                      className="rounded border border-slate-500 px-3 py-1 text-xs font-semibold hover:bg-slate-100"
                     >
                       Open / Reprint
                     </button>
@@ -119,4 +129,3 @@ function History() {
 }
 
 export default History;
- 

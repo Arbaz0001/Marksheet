@@ -1,6 +1,62 @@
- 
- 
-function MarksTable({ subjects }) {
+function MarksTable({ subjects, examStructure }) {
+  // New dynamic structure: subjects[i].marks = [{ examName, maxMarks, obtained }]
+  const isDynamic = Array.isArray(examStructure) && examStructure.length > 0;
+
+  if (isDynamic) {
+    return (
+      <section className="overflow-x-auto">
+        <table className="w-full border-collapse border border-red-700 text-[11px] leading-tight">
+          <thead>
+            <tr>
+              <th className="border border-red-700 px-1 py-1" rowSpan={2}>
+                Subject
+              </th>
+              {examStructure.map((e) => (
+                <th key={e.examName} className="border border-red-700 px-1 py-1">
+                  {e.examName}
+                </th>
+              ))}
+              <th className="border border-red-700 px-1 py-1" rowSpan={2}>
+                Total
+              </th>
+              <th className="border border-red-700 px-1 py-1" rowSpan={2}>
+                Max
+              </th>
+              <th className="border border-red-700 px-1 py-1" rowSpan={2}>
+                Division
+              </th>
+            </tr>
+            <tr className="text-red-700">
+              {examStructure.map((e) => (
+                <th key={e.examName} className="border border-red-700 px-1 py-1">
+                  {e.maxMarks}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {subjects.map((subject, index) => (
+              <tr key={`${subject.name}-${index}`}>
+                <td className="border border-red-700 px-1 py-1 uppercase">{subject.name}</td>
+                {(subject.marks || []).map((mark, mi) => (
+                  <td key={mi} className="border border-red-700 px-1 py-1 text-center">
+                    {mark.obtained}
+                  </td>
+                ))}
+                <td className="border border-red-700 px-1 py-1 text-center font-semibold">
+                  {subject.total}
+                </td>
+                <td className="border border-red-700 px-1 py-1 text-center">{subject.maxTotal}</td>
+                <td className="border border-red-700 px-1 py-1">{subject.divisionDescription}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    );
+  }
+
+  // Legacy structure (flat fields: firstTest, secondTest, etc.)
   return (
     <section className="overflow-x-auto">
       <table className="w-full border-collapse border border-red-700 text-[11px] leading-tight">
@@ -67,4 +123,3 @@ function MarksTable({ subjects }) {
 }
 
 export default MarksTable;
- 

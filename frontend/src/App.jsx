@@ -1,7 +1,7 @@
- 
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
-import CreateReportCard from './pages/CreateReportCard';
+import CreateSchool from './pages/CreateSchool';
+import CreateMarksheet from './pages/CreateMarksheet';
 import History from './pages/History';
 
 function App() {
@@ -10,7 +10,8 @@ function App() {
       <div className="mx-auto max-w-7xl">
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/create" element={<CreateReportCard />} />
+          <Route path="/schools/create" element={<CreateSchool />} />
+          <Route path="/create" element={<CreateMarksheet />} />
           <Route path="/history" element={<History />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -20,4 +21,3 @@ function App() {
 }
 
 export default App;
-  
