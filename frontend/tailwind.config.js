@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+ 
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
@@ -11,17 +11,4 @@ export default {
   },
   plugins: [],
 };
-=======
-/** @type {import('tailwindcss').Config} */
-export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  theme: {
-    extend: {
-      fontFamily: {
-        serif: ['Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
-      },
-    },
-  },
-  plugins: [],
-};
->>>>>>> ed0cc00c47b55670134b48d0f5650fb644776df4
+ 

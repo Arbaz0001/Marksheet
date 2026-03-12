@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+ 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -33,39 +33,5 @@ body {
     min-height: 297mm !important;
   }
 }
-=======
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-  color-scheme: light;
-}
-
-body {
-  @apply bg-slate-100 text-slate-900 font-serif;
-}
-
-@media print {
-  @page {
-    size: A4 portrait;
-    margin: 6mm;
-  }
-
-  body {
-    background: #ffffff;
-  }
-
-  .no-print {
-    display: none !important;
-  }
-
-  .print-surface {
-    box-shadow: none !important;
-    margin: 0 !important;
-    border: 1px solid #000 !important;
-    width: 210mm !important;
-    min-height: 297mm !important;
-  }
-}
->>>>>>> ed0cc00c47b55670134b48d0f5650fb644776df4
+ 
+ 
