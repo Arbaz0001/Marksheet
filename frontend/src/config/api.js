@@ -1,15 +1,22 @@
 /**
  * Centralized API Base URL Configuration
  *
- * Development: http://localhost:5001/api
- * Production: /api (relative path, uses current domain)
+ * Development  → http://localhost:5001/api
+ * Production   → /api  (handled by nginx reverse proxy)
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const isDevelopment = import.meta.env.MODE === "development";
 
-// Validate URL in development
-if (import.meta.env.DEV && !import.meta.env.VITE_API_URL) {
-  console.warn('[API Config] VITE_API_URL not set, using fallback:', API_BASE_URL);
+const API_BASE_URL = isDevelopment
+  ? "http://localhost:5001/api"
+  : "/api";
+
+// Development logging (helps debugging)
+if (isDevelopment) {
+  console.log("🌐 API Mode: Development");
+  console.log("🔗 API Base URL:", API_BASE_URL);
+} else {
+  console.log("🌐 API Mode: Production");
 }
 
 export default API_BASE_URL;
