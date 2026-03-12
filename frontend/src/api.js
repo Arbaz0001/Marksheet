@@ -1,12 +1,14 @@
 import axios from 'axios';
-
-export const API_BASE =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+import API_BASE_URL from './config/api';
 
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 });
+
+// Export for legacy compatibility
+export { API_BASE_URL as API_BASE };
+export { API_BASE_URL };
 
 // ── School APIs ─────────────────────────────────────────────────────────────
 export const getSchools = () => api.get('/schools');
