@@ -4,8 +4,11 @@ import {
   getReportCardById,
   getReportCards,
 } from '../controllers/reportController.js';
+import { requireAdminAuth } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+router.use(requireAdminAuth);
 
 router.post('/', createReportCard);
 router.get('/', getReportCards);

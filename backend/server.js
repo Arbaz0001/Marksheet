@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import authRoutes from "./routes/authRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import schoolRoutes from "./routes/schoolRoutes.js";
 import marksheetRoutes from "./routes/marksheetRoutes.js";
@@ -26,6 +27,7 @@ app.get("/api/health", (req, res) => {
 });
 
 // routes
+app.use("/api/auth", authRoutes);
 app.use("/api/report-cards", reportRoutes); // legacy
 app.use("/api/schools", schoolRoutes);
 app.use("/api/marksheets", marksheetRoutes);

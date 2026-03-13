@@ -68,36 +68,16 @@ function ReportCardLayout({ reportData, onBack }) {
         className="print-surface w-full max-w-[210mm] bg-white p-3 text-black shadow-lg"
         style={{ minHeight: '297mm' }}
       >
-        <div className="relative border border-red-700">
-          <div
-            className="pointer-events-none absolute inset-0 z-0"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-            }}
-          >
-            <img
-              src="/school.jpeg"
-              alt="School watermark"
-              style={{
-                width: '70%',
-                height: 'auto',
-                objectFit: 'contain',
-                opacity: 0.1,
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-              }}
-            />
-          </div>
+        <div className="marksheet border border-red-700">
+          <img
+            src="/school.jpeg"
+            className="watermark"
+            alt="School watermark"
+            loading="eager"
+            decoding="sync"
+          />
 
-          <div className="relative z-10">
+          <div className="marksheet-content">
           <header className="grid grid-cols-[96px_1fr] border-b border-red-700">
             <div className="flex items-center justify-center border-r border-red-700 p-2 text-center text-[10px] font-semibold">
               <img
@@ -125,11 +105,17 @@ function ReportCardLayout({ reportData, onBack }) {
             <div className="border-r border-red-700 p-2 text-center text-[38px] font-semibold leading-tight text-blue-700">
               Final Report Card
             </div>
-            <div className="p-2 text-[16px] font-semibold text-red-700">
+            <div className="p-2 text-[13px] font-semibold text-red-700">
               <p>
+                PSP Code: <span className="text-slate-900">{reportData.pspCode || '-'}</span>
+              </p>
+              <p className="mt-1">
+                School Code: <span className="text-slate-900">{reportData.schoolCode || '-'}</span>
+              </p>
+              <p className="mt-3">
                 Roll No.: <span className="text-slate-900">{reportData.rollNumber}</span>
               </p>
-              <p className="mt-4 text-[14px] text-slate-900">Session: {reportData.session}</p>
+              <p className="mt-3 text-[14px] text-slate-900">Session: {reportData.session}</p>
             </div>
           </div>
 

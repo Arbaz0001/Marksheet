@@ -232,10 +232,12 @@ function CreateMarksheet() {
           {/* Auto-filled school details */}
           {selectedSchool && (
             <div className="mt-3 rounded border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-              <p className="font-bold text-slate-800">{selectedSchool.schoolName}</p>
-              <p className="text-slate-600">{selectedSchool.schoolAddress}</p>
-              <div className="mt-1 flex gap-6 text-slate-600">
-                <span>DISE: {selectedSchool.schoolDISECode}</span>
+              <p className="font-bold text-slate-800">{selectedSchool.name || selectedSchool.schoolName}</p>
+              <p className="text-slate-600">{selectedSchool.address || selectedSchool.schoolAddress}</p>
+              <div className="mt-1 flex flex-wrap gap-4 text-slate-600">
+                <span>DISE: {selectedSchool.diseCode || selectedSchool.schoolDISECode}</span>
+                <span>PSP: {selectedSchool.pspCode}</span>
+                <span>School Code: {selectedSchool.schoolCode}</span>
                 <span>Session: {selectedSchool.session}</span>
               </div>
             </div>

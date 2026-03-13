@@ -54,6 +54,10 @@ const marksheetSchema = new mongoose.Schema(
     schoolName: { type: String, required: true },
     schoolAddress: { type: String, required: true },
     schoolDISECode: { type: String, required: true },
+    schoolCity: { type: String, default: '' },
+    schoolState: { type: String, default: '' },
+    pspCode: { type: String, default: '' },
+    schoolCode: { type: String, default: '' },
     session: { type: String, required: true },
     examStructure: {
       type: [{ examName: String, maxMarks: Number }],

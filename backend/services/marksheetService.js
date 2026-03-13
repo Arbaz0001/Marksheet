@@ -68,9 +68,13 @@ export const createMarksheet = async (body) => {
   const doc = await Marksheet.create({
     school: school._id,
     // Denormalized snapshot
-    schoolName: school.schoolName,
-    schoolAddress: school.schoolAddress,
-    schoolDISECode: school.schoolDISECode,
+    schoolName: school.name || school.schoolName,
+    schoolAddress: school.address || school.schoolAddress,
+    schoolDISECode: school.diseCode || school.schoolDISECode,
+    schoolCity: school.city || '',
+    schoolState: school.state || '',
+    pspCode: school.pspCode || '',
+    schoolCode: school.schoolCode || '',
     session: school.session,
     examStructure: school.examStructure,
     // Student

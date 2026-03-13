@@ -7,9 +7,9 @@
 
 const isDevelopment = import.meta.env.MODE === "development";
 
-const API_BASE_URL = isDevelopment
+const API_BASE_URL = import.meta.env.VITE_API_URL || (isDevelopment
   ? "http://localhost:5001/api"
-  : "/api";
+  : "/api");
 
 // Development logging (helps debugging)
 if (isDevelopment) {

@@ -4,8 +4,11 @@ import {
   getMarksheets,
   getMarksheetById,
 } from '../controllers/marksheetController.js';
+import { requireAdminAuth } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+router.use(requireAdminAuth);
 
 router.post('/', createMarksheet);
 router.get('/', getMarksheets);

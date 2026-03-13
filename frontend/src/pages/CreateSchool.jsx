@@ -1,6 +1,7 @@
+import { useEffect } from 'react';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { createSchool } from '../api';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { createSchool, getSchoolById, updateSchool } from '../api';
 
 const DEFAULT_EXAMS = [
   { examName: 'First Test', maxMarks: 10 },
@@ -20,17 +21,57 @@ const DEFAULT_SUBJECTS = [
 
 function CreateSchool() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
 
   const [form, setForm] = useState({
-    schoolName: '',
-    schoolAddress: '',
-    schoolDISECode: '',
+    name: '',
+    address: '',
+    city: '',
+    state: '',
+    diseCode: '',
+    pspCode: '',
+    schoolCode: '',
     session: '',
   });
   const [exams, setExams] = useState(DEFAULT_EXAMS);
   const [subjects, setSubjects] = useState(DEFAULT_SUBJECTS);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!isEditMode) {
+      return;
+    }
+
+    const fetchSchool = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const res = await getSchoolById(id);
+        const school = res.data;
+        setForm({
+          name: school.name || school.schoolName || '',
+          address: school.address || school.schoolAddress || '',
+          city: school.city || '',
+          state: school.state || '',
+          diseCode: school.diseCode || school.schoolDISECode || '',
+          pspCode: school.pspCode || '',
+          schoolCode: school.schoolCode || '',
+          session: school.session || '',
+        });
+        setExams(school.examStructure?.length ? school.examStructure : DEFAULT_EXAMS);
+        setSubjects(school.subjectStructure?.length ? school.subjectStructure : DEFAULT_SUBJECTS);
+      } catch (err) {
+        setError(err.response?.data?.message || err.message || 'Unable to load school.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchool();
+  }, [id, isEditMode]);
 
   const handleBasicChange = (e) => {
     const { name, value } = e.target;
@@ -55,6 +96,11 @@ function CreateSchool() {
     e.preventDefault();
     setError('');
 
+    if (!/^\d+$/.test(form.pspCode) || !/^\d+$/.test(form.schoolCode)) {
+      setError('PSP Code and School Code must contain digits only.');
+      return;
+    }
+
     if (exams.length === 0) {
       setError('At least one exam type is required.');
       return;
@@ -66,17 +112,28 @@ function CreateSchool() {
 
     try {
       setSaving(true);
-      await createSchool({
+      const payload = {
         ...form,
         examStructure: exams,
         subjectStructure: subjects,
-      });
+      };
+
+      if (isEditMode) {
+        await updateSchool(id, payload);
+      } else {
+        await createSchool(payload);
+      }
+
       navigate('/');
     } catch (err) {
       if (err.code === 'ERR_NETWORK') {
         setError('Backend server is not reachable. Please try again later.');
       } else {
-        setError(err.response?.data?.message || err.message || 'Unable to create school.');
+        setError(
+          err.response?.data?.message ||
+            err.message ||
+            `Unable to ${isEditMode ? 'update' : 'create'} school.`
+        );
       }
     } finally {
       setSaving(false);
@@ -88,11 +145,13 @@ function CreateSchool() {
   return (
     <section className="rounded-xl border border-slate-300 bg-white p-6 shadow-md sm:p-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Create New School</h1>
+        <h1 className="text-2xl font-bold">{isEditMode ? 'Edit School' : 'Create New School'}</h1>
         <Link to="/" className="text-sm font-semibold text-slate-700 underline">
           Back to Dashboard
         </Link>
       </div>
+
+      {loading ? <p className="mb-4 text-sm text-slate-500">Loading school details...</p> : null}
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8">
         {/* School Details */}
@@ -100,9 +159,13 @@ function CreateSchool() {
           <h2 className="mb-3 text-lg font-bold">School Details</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {[
-              ['schoolName', 'School Name'],
-              ['schoolAddress', 'School Address'],
-              ['schoolDISECode', 'School DISE Code'],
+              ['name', 'School Name'],
+              ['address', 'School Address'],
+              ['city', 'School City'],
+              ['state', 'School State'],
+              ['diseCode', 'School DISE Code'],
+              ['pspCode', 'PSP Code'],
+              ['schoolCode', 'School Code'],
               ['session', 'Session (e.g. 2025-26)'],
             ].map(([name, label]) => (
               <label key={name} className="block">
@@ -113,6 +176,8 @@ function CreateSchool() {
                   value={form[name]}
                   onChange={handleBasicChange}
                   className="w-full rounded border border-slate-300 px-3 py-2"
+                  inputMode={name === 'pspCode' || name === 'schoolCode' ? 'numeric' : undefined}
+                  pattern={name === 'pspCode' || name === 'schoolCode' ? '\\d*' : undefined}
                   required
                 />
               </label>
@@ -240,10 +305,10 @@ function CreateSchool() {
 
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || loading}
           className="w-max rounded bg-slate-900 px-6 py-2.5 font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
         >
-          {saving ? 'Saving...' : 'Create School'}
+          {saving ? 'Saving...' : isEditMode ? 'Update School' : 'Create School'}
         </button>
       </form>
     </section>
