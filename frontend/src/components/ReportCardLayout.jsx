@@ -6,6 +6,8 @@ import StudentInfo from './StudentInfo';
 
 function ReportCardLayout({ reportData, onBack }) {
   const reportRef = useRef(null);
+  const showGrading = reportData.useGradingSystem !== false;
+  const hasGradingRows = showGrading && Array.isArray(reportData.gradingSystem) && reportData.gradingSystem.length > 0;
 
   const handleDownloadPdf = async () => {
     if (!reportRef.current) return;
@@ -136,7 +138,7 @@ function ReportCardLayout({ reportData, onBack }) {
                   <th className="border border-red-700 px-1 py-1">Total Obtained Marks</th>
                   <th className="border border-red-700 px-1 py-1">Percentage</th>
                   <th className="border border-red-700 px-1 py-1">Overall Div.</th>
-                  <th className="border border-red-700 px-1 py-1">Overall Grade</th>
+                  {showGrading && <th className="border border-red-700 px-1 py-1">Overall Grade</th>}
                   <th className="border border-red-700 px-1 py-1">Result</th>
                   <th className="border border-red-700 px-1 py-1">Position In Class</th>
                 </tr>
@@ -155,9 +157,11 @@ function ReportCardLayout({ reportData, onBack }) {
                   <td className="border border-red-700 px-1 py-1 text-center">
                     {reportData.overallResult.overallDivision}
                   </td>
-                  <td className="border border-red-700 px-1 py-1 text-center">
-                    {reportData.overallResult.overallGrade}
-                  </td>
+                  {showGrading && (
+                    <td className="border border-red-700 px-1 py-1 text-center">
+                      {reportData.overallResult.overallGrade || '-'}
+                    </td>
+                  )}
                   <td className="border border-red-700 px-1 py-1 text-center">
                     {reportData.overallResult.result}
                   </td>
@@ -227,32 +231,34 @@ function ReportCardLayout({ reportData, onBack }) {
               </table>
             </div>
 
-            <div className="grid grid-cols-[42%_58%] border-t border-red-700">
-              <table className="w-full border-collapse text-[11px]">
-                <thead>
-                  <tr>
-                    <th className="border border-red-700 px-1 py-1 text-red-700" colSpan={3}>
-                      Grading System
-                    </th>
-                  </tr>
-                  <tr>
-                    <th className="border border-red-700 px-1 py-1">Grade</th>
-                    <th className="border border-red-700 px-1 py-1">% Range</th>
-                    <th className="border border-red-700 px-1 py-1">Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reportData.gradingSystem.map((item) => (
-                    <tr key={item.grade}>
-                      <td className="border border-red-700 px-1 py-1 text-center">{item.grade}</td>
-                      <td className="border border-red-700 px-1 py-1 text-center">{item.range}</td>
-                      <td className="border border-red-700 px-1 py-1">{item.description}</td>
+            <div className="grid border-t border-red-700" style={{ gridTemplateColumns: hasGradingRows ? '42% 58%' : '100%' }}>
+              {hasGradingRows && (
+                <table className="w-full border-collapse text-[11px]">
+                  <thead>
+                    <tr>
+                      <th className="border border-red-700 px-1 py-1 text-red-700" colSpan={3}>
+                        Grading System
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                    <tr>
+                      <th className="border border-red-700 px-1 py-1">Grade</th>
+                      <th className="border border-red-700 px-1 py-1">% Range</th>
+                      <th className="border border-red-700 px-1 py-1">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportData.gradingSystem.map((item) => (
+                      <tr key={`${item.grade}-${item.range}`}>
+                        <td className="border border-red-700 px-1 py-1 text-center">{item.grade}</td>
+                        <td className="border border-red-700 px-1 py-1 text-center">{item.range}</td>
+                        <td className="border border-red-700 px-1 py-1">{item.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
 
-              <div className="flex flex-col justify-between border-l border-red-700 p-2 text-[11px]">
+              <div className={`flex flex-col justify-between p-2 text-[11px] ${hasGradingRows ? 'border-l border-red-700' : ''}`}>
                 <p className="text-center">
                   <span className="font-semibold">Signature with class teacher</span>
                 </p>

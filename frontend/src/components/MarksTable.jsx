@@ -1,6 +1,18 @@
 function MarksTable({ subjects, examStructure }) {
   // New dynamic structure: subjects[i].marks = [{ examName, maxMarks, obtained }]
   const isDynamic = Array.isArray(examStructure) && examStructure.length > 0;
+  const hasGrades = Array.isArray(subjects) && subjects.some((subject) => subject.grade);
+  const examMaxLabels = isDynamic
+    ? examStructure.map((exam, examIndex) => {
+        const values = (subjects || [])
+          .map((subject) => subject?.marks?.[examIndex]?.maxMarks)
+          .filter((value) => Number.isFinite(value));
+
+        if (!values.length) return exam.maxMarks;
+        const uniqueValues = [...new Set(values)];
+        return uniqueValues.length === 1 ? uniqueValues[0] : 'Var';
+      })
+    : [];
 
   if (isDynamic) {
     return (
@@ -25,11 +37,16 @@ function MarksTable({ subjects, examStructure }) {
               <th className="border border-red-700 px-1 py-1" rowSpan={2}>
                 Division
               </th>
+              {hasGrades && (
+                <th className="border border-red-700 px-1 py-1" rowSpan={2}>
+                  Grade
+                </th>
+              )}
             </tr>
             <tr className="text-red-700">
-              {examStructure.map((e) => (
+              {examStructure.map((e, index) => (
                 <th key={e.examName} className="border border-red-700 px-1 py-1">
-                  {e.maxMarks}
+                  {examMaxLabels[index]}
                 </th>
               ))}
             </tr>
@@ -48,6 +65,11 @@ function MarksTable({ subjects, examStructure }) {
                 </td>
                 <td className="border border-red-700 px-1 py-1 text-center">{subject.maxTotal}</td>
                 <td className="border border-red-700 px-1 py-1">{subject.divisionDescription}</td>
+                {hasGrades && (
+                  <td className="border border-red-700 px-1 py-1 text-center font-semibold">
+                    {subject.grade || '-'}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

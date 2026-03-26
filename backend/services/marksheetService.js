@@ -25,9 +25,56 @@ const getOverallGrade = (pct) => {
   return 'E';
 };
 
+const parseRange = (rangeText = '') => {
+  const match = String(rangeText)
+    .trim()
+    .match(/^(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)$/);
+  if (!match) return null;
+
+  const min = Number(match[1]);
+  const max = Number(match[2]);
+  if (Number.isNaN(min) || Number.isNaN(max)) return null;
+  return {
+    min: Math.min(min, max),
+    max: Math.max(min, max),
+  };
+};
+
+const normalizeGradingSystem = (gradingSystem = []) =>
+  (Array.isArray(gradingSystem) ? gradingSystem : [])
+    .map((item) => ({
+      grade: String(item.grade || '').trim(),
+      range: String(item.range || '').trim(),
+      description: String(item.description || '').trim(),
+      parsedRange: parseRange(item.range),
+    }))
+    .filter((item) => item.grade && item.parsedRange)
+    .map(({ parsedRange, ...item }) => ({
+      ...item,
+      parsedRange,
+    }));
+
+const resolveGradeFromSystem = (pct, gradingSystem = []) => {
+  const matched = gradingSystem.find(
+    (item) => pct >= item.parsedRange.min && pct <= item.parsedRange.max
+  );
+  return matched?.grade || '';
+};
+
 export const createMarksheet = async (body) => {
   const school = await School.findById(body.school).lean();
   if (!school) throw new Error('School not found');
+
+  const useGradingSystem = body.useGradingSystem !== false;
+  const normalizedGradingSystem = useGradingSystem
+    ? normalizeGradingSystem(body.gradingSystem?.length ? body.gradingSystem : GRADING_SYSTEM)
+    : [];
+  const normalizedExamStructure = Array.isArray(body.examStructure)
+    ? body.examStructure.map((exam) => ({
+        examName: exam.examName,
+        maxMarks: Math.max(Number(exam.maxMarks) || 0, 0),
+      }))
+    : school.examStructure;
 
   // Calculate per-subject totals
   const subjects = (body.subjects || []).map((sub) => {
@@ -45,6 +92,9 @@ export const createMarksheet = async (body) => {
       total,
       maxTotal,
       divisionDescription: getDivisionDescription(pct),
+      grade: useGradingSystem
+        ? resolveGradeFromSystem(pct, normalizedGradingSystem) || getOverallGrade(pct)
+        : '',
     };
   });
 
@@ -60,7 +110,9 @@ export const createMarksheet = async (body) => {
     totalObtainedMarks,
     percentage,
     overallDivision: getDivisionDescription(percentage),
-    overallGrade: getOverallGrade(percentage),
+    overallGrade: useGradingSystem
+      ? resolveGradeFromSystem(percentage, normalizedGradingSystem) || getOverallGrade(percentage)
+      : '',
     result: percentage >= 31 ? 'Pass' : 'Fail',
     positionInClass: body.positionInClass || '',
   };
@@ -76,7 +128,7 @@ export const createMarksheet = async (body) => {
     pspCode: school.pspCode || '',
     schoolCode: school.schoolCode || '',
     session: school.session,
-    examStructure: school.examStructure,
+    examStructure: normalizedExamStructure,
     // Student
     studentName: body.studentName,
     fatherName: body.fatherName,
@@ -89,7 +141,14 @@ export const createMarksheet = async (body) => {
     subjects,
     extraSubjects: body.extraSubjects || [],
     overallResult,
-    gradingSystem: GRADING_SYSTEM,
+    useGradingSystem,
+    gradingSystem: useGradingSystem
+      ? normalizedGradingSystem.map(({ grade, range, description }) => ({
+          grade,
+          range,
+          description,
+        }))
+      : [],
     // Attendance
     totalMeetings: Number(body.totalMeetings) || 0,
     studentMeetings: Number(body.studentMeetings) || 0,

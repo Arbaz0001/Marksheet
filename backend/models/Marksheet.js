@@ -16,6 +16,7 @@ const marksheetSubjectSchema = new mongoose.Schema(
     total: { type: Number, required: true, default: 0 },
     maxTotal: { type: Number, required: true, default: 0 },
     divisionDescription: { type: String, required: true, default: '' },
+    grade: { type: String, default: '' },
   },
   { _id: false }
 );
@@ -35,7 +36,7 @@ const overallResultSchema = new mongoose.Schema(
     totalObtainedMarks: { type: Number, required: true },
     percentage: { type: Number, required: true },
     overallDivision: { type: String, required: true },
-    overallGrade: { type: String, required: true },
+    overallGrade: { type: String, default: '' },
     result: { type: String, required: true },
     positionInClass: { type: String, default: '' },
   },
@@ -76,9 +77,10 @@ const marksheetSchema = new mongoose.Schema(
     extraSubjects: { type: [extraSubjectSchema], default: [] },
     // Calculated result
     overallResult: { type: overallResultSchema, required: true },
+    useGradingSystem: { type: Boolean, default: true },
     gradingSystem: {
       type: [{ grade: String, range: String, description: String }],
-      required: true,
+      default: [],
     },
     // Attendance
     totalMeetings: { type: Number, default: 0 },
