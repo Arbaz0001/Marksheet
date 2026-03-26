@@ -75,7 +75,6 @@ function CreateMarksheet() {
   const [schools, setSchools] = useState([]);
   const [loadingSchools, setLoadingSchools] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState(null);
-  const [examStructure, setExamStructure] = useState([]);
 
   const [form, setForm] = useState({
     studentName: '',
@@ -114,16 +113,9 @@ function CreateMarksheet() {
     const id = e.target.value;
     const school = schools.find((s) => s._id === id) || null;
     setSelectedSchool(school);
-    const nextExamStructure = school
-      ? (school.examStructure || []).map((exam) => ({
-          examName: exam.examName,
-          maxMarks: Number(exam.maxMarks) || 0,
-        }))
-      : [];
-    setExamStructure(nextExamStructure);
     setSubjects(
       school
-        ? buildSubjectsFromStructures(school.subjectStructure || [], nextExamStructure)
+        ? buildSubjectsFromStructures(school.subjectStructure || [], school.examStructure || [])
         : []
     );
   };
@@ -133,40 +125,25 @@ function CreateMarksheet() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleMarkFieldChange = (subjectIndex, examIndex, value) => {
+  const handleMarkFieldChange = (subjectIndex, examIndex, field, value) => {
     setSubjects((prev) =>
       prev.map((sub, si) => {
         if (si !== subjectIndex) return sub;
         const marks = sub.marks.map((mark, mi) => {
           if (mi !== examIndex) return mark;
           const parsedValue = Math.max(Number(value) || 0, 0);
+
+          if (field === 'maxMarks') {
+            const maxMarks = parsedValue;
+            const obtained = Math.min(mark.obtained, maxMarks);
+            return { ...mark, maxMarks, obtained };
+          }
+
           const obtained = Math.min(parsedValue, mark.maxMarks);
           return { ...mark, obtained };
         });
         return { ...sub, marks };
       })
-    );
-  };
-
-  const handleExamMaxChange = (examIndex, value) => {
-    const nextMax = Math.max(Number(value) || 0, 0);
-
-    setExamStructure((prev) =>
-      prev.map((exam, index) => (index === examIndex ? { ...exam, maxMarks: nextMax } : exam))
-    );
-
-    setSubjects((prev) =>
-      prev.map((sub) => ({
-        ...sub,
-        marks: sub.marks.map((mark, index) => {
-          if (index !== examIndex) return mark;
-          return {
-            ...mark,
-            maxMarks: nextMax,
-            obtained: Math.min(mark.obtained, nextMax),
-          };
-        }),
-      }))
     );
   };
 
@@ -244,7 +221,6 @@ function CreateMarksheet() {
       setSaving(true);
       const res = await createMarksheet({
         school: selectedSchool._id,
-        examStructure,
         ...form,
         subjects: computedSubjects,
         extraSubjects,
@@ -367,7 +343,7 @@ function CreateMarksheet() {
                     ...prev,
                     {
                       name: '',
-                      marks: examStructure.map((e) => ({
+                      marks: (selectedSchool?.examStructure || []).map((e) => ({
                         examName: e.examName,
                         maxMarks: e.maxMarks,
                         obtained: 0,
@@ -380,25 +356,19 @@ function CreateMarksheet() {
                 + Add Subject
               </button>
             </div>
-            <p className="mb-2 text-xs text-slate-500">Max marks upar header me edit hoga, niche sirf obtained marks bharna hai.</p>
+            <p className="mb-2 text-xs text-slate-500">
+              Har exam cell me pehli value obtained marks aur doosri value max marks hai.
+            </p>
 
             <table className="w-full border-collapse border border-slate-400 text-sm">
               <thead>
                 <tr className="bg-slate-100">
                   <th className="border border-slate-400 px-2 py-2 text-left">Subject</th>
-                  {examStructure.map((e, examIndex) => (
+                  {selectedSchool.examStructure.map((e) => (
                     <th key={e.examName} className="border border-slate-400 px-2 py-2 text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <span>{e.examName}</span>
-                        <input
-                          type="number"
-                          min="0"
-                          value={e.maxMarks}
-                          onChange={(event) => handleExamMaxChange(examIndex, event.target.value)}
-                          className="w-20 rounded border border-slate-300 px-1 py-1 text-center text-xs"
-                          title={`Max marks for ${e.examName}`}
-                        />
-                      </div>
+                      {e.examName}
+                      <br />
+                      <span className="font-normal text-slate-500 text-xs">max {e.maxMarks}</span>
                     </th>
                   ))}
                   <th className="border border-slate-400 px-2 py-2 text-center">Total</th>
@@ -425,15 +395,25 @@ function CreateMarksheet() {
                       </td>
                       {sub.marks.map((mark, mi) => (
                         <td key={mi} className="border border-slate-400 px-2 py-1">
-                          <input
-                            type="number"
-                            min="0"
-                            max={mark.maxMarks}
-                            value={mark.obtained}
-                            onChange={(e) => handleMarkFieldChange(si, mi, e.target.value)}
-                            className="w-20 rounded border border-slate-300 px-1 py-1 text-center"
-                            title="Obtained Marks"
-                          />
+                          <div className="flex flex-col gap-1">
+                            <input
+                              type="number"
+                              min="0"
+                              max={mark.maxMarks}
+                              value={mark.obtained}
+                              onChange={(e) => handleMarkFieldChange(si, mi, 'obtained', e.target.value)}
+                              className="w-20 rounded border border-slate-300 px-1 py-1 text-center"
+                              title="Obtained Marks"
+                            />
+                            <input
+                              type="number"
+                              min="0"
+                              value={mark.maxMarks}
+                              onChange={(e) => handleMarkFieldChange(si, mi, 'maxMarks', e.target.value)}
+                              className="w-20 rounded border border-slate-300 px-1 py-1 text-center text-slate-700"
+                              title="Max Marks"
+                            />
+                          </div>
                         </td>
                       ))}
                       <td className="border border-slate-400 px-2 py-1 text-center font-semibold text-slate-800">
@@ -466,7 +446,7 @@ function CreateMarksheet() {
                 <tr className="bg-slate-50 font-semibold">
                   <td
                     className="border border-slate-400 px-2 py-1.5"
-                    colSpan={examStructure.length + 1}
+                    colSpan={selectedSchool.examStructure.length + 1}
                   >
                     Grand Total
                   </td>
@@ -482,7 +462,7 @@ function CreateMarksheet() {
                 <tr className="bg-slate-50">
                   <td
                     className="border border-slate-400 px-2 py-1.5 font-semibold"
-                    colSpan={examStructure.length + 1}
+                    colSpan={selectedSchool.examStructure.length + 1}
                   >
                     Percentage
                   </td>
